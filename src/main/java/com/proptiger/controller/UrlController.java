@@ -14,39 +14,49 @@ import com.proptiger.model.Click;
 import com.proptiger.model.Url;
 import com.proptiger.service.UrlService;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+
+@Api(value="url/",description="URL Shortner Service")
 @Controller
 public class UrlController {
 	
 	@Autowired
 	private UrlService urlService;
 	
-	@RequestMapping(value="/ping")
+	@ApiOperation(value="Testing Method",notes="It response with pong.",response=String.class)
+	@RequestMapping(value="/ping",method=RequestMethod.GET)
 	@ResponseBody
 	public String ping() {
 		return "pong";
 	}
 	
+	@ApiOperation(value="Convert any long-url into short-url",notes="It performs decimal to base 62 conversion on id to generate a unique short url path.",response=String.class)
 	@RequestMapping(value="/url",method=RequestMethod.POST)
 	@ResponseBody
-	public String insertNewUrl(@RequestBody Url url) {
+	public String insertNewUrl(@ApiParam(value="Only provide long-url(required) and domain name(optional)",required=true) @RequestBody Url url) {
 		return urlService.saveUrl(url);
 	}
 	
+	@ApiOperation(value="Return original long-url",notes="It performs reverse base converion to retrive id and use that id to find long-url in database",response=String.class)
 	@RequestMapping(value="/url",method=RequestMethod.GET)
 	@ResponseBody
-	public String getLongUrl(@RequestParam String shortUrl) {
+	public String getLongUrl(@ApiParam(value="Short-url which you want to open",required=true) @RequestParam String shortUrl) {
 		String arr[]=shortUrl.split("/");
 		int id=urlService.computeId(arr[1].toCharArray(),arr[1].length());
 		urlService.recordClick(id);
 		return urlService.fetchLongUrl(id);
 	}
 	
+	@ApiOperation(value="Respond with total clicks of short-url",notes="Looks up data of short to long url requests and extract today's clicks",response=Click.class,responseContainer="List")
 	@RequestMapping(value="/url/report/clicks",method=RequestMethod.GET)
 	@ResponseBody
 	public List<Click> getDailyReport() {
 		return urlService.generateDailyReport();
 	}
 	
+	@ApiOperation(value="Respond with total short url created today",notes="Queries database and return the result set.",response=Url.class,responseContainer="List")
 	@RequestMapping(value="/url/report/newUrls",method=RequestMethod.GET)
 	@ResponseBody
 	public List<Url> getDailyUrlCreated() {
