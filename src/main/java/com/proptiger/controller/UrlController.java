@@ -18,7 +18,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
-@Api(value="url/",description="URL Shortner Service")
+@Api(value="url/",description="URL Shortener Service")
 @Controller
 public class UrlController {
 	
