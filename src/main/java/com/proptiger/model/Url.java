@@ -30,9 +30,6 @@ public class Url {
 	@Column(name="creation_date")
 	private Timestamp creationDate;
 	
-	@Column(name="expiry_date")
-	private Timestamp expiryDate;
-	
 	@PrePersist
 	public void beforeCreation() {
 		Calendar c=Calendar.getInstance();
@@ -79,11 +76,4 @@ public class Url {
 		this.creationDate = creationDate;
 	}
 
-	public Timestamp getExpiryDate() {
-		return expiryDate;
-	}
-
-	public void setExpiryDate(Timestamp expiryDate) {
-		this.expiryDate = expiryDate;
-	}
 }

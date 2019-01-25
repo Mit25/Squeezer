@@ -25,6 +25,11 @@ public class UrlService {
 	@Autowired
 	private ClickDao clickDao;
 	
+	/* This function receives the long url and checks if it is already exist in database. 
+	 * If exist than return corresponding short url.
+	 * Otherwise it will generate a new short url.
+	 * Then save the url's reord in database and return short url.
+	 */
 	//@CachePut(value="LongUrlCache",key="#result")
 	public String saveUrl(Url url) {
 		Url tmpUrl;
@@ -39,11 +44,19 @@ public class UrlService {
 		return urlDao.save(tmpUrl).getShortUrl();
 	}
 
+	/* This method fetch long url for short url.
+	 * Id was extracted from short url in UrlController and passed into this method. 
+	 */
 	@Cacheable("LongUrlCache")
 	public String fetchLongUrl(int id) {
 		return urlDao.findById(id).getLongUrl();
 	}
 	
+	/* Stores how much time a short url was clicked.
+	 * It checks database for record of current date for given short url.
+	 * If the record exist than click count will increased by 1.
+	 * Or a new record is stored with click count 1.
+	 */
 	@Async
 	public void recordClick(int id) {
 		Date currDate=new Date(Calendar.getInstance().getTimeInMillis());
@@ -58,6 +71,9 @@ public class UrlService {
 		}
 	}
 	
+	/* Compute id from short url.
+	 * Simple base conversion logic for base 62 to base 10.
+	 */
 	public int computeId(char[] shortUrl,int n) {
 		int id=0;
 	    for (int i=0; i < n; i++) { 
@@ -71,10 +87,16 @@ public class UrlService {
 	    return id; 
 	}
 	
+	/* Check database if long url exist or not.
+	 * If exist than return the tuple.
+	 */
 	private Url isLongUrlExist(String longUrl) {
 		return urlDao.findByLongUrl(longUrl);
 	}
 	
+	/* This method generates short url using auto incremented id.
+	 * Simple base conversion of id from base 10 to base 62.
+	 */
 	private String generateShortUrl(int id) {
 		String map = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"; 
 		String shortUrl=""; 
@@ -85,11 +107,17 @@ public class UrlService {
  		return shortUrl;
 	}
 
+	/* Returns the list of ids of urls which were clicked today.
+	 */
 	public List<Click> generateDailyReport() {
 		Date currDate=new Date(Calendar.getInstance().getTimeInMillis());
 		return clickDao.generateReport(currDate);
 	}
-
+	
+	/* Returns the list of urls who are newly created today.
+	 * Creation date in database is stored as timestamp instead of date.
+	 * So we query where timestamp between today 12:00AM and tomorrow 12:00AM.
+	 */
 	public List<Url> getDailyUrlCreated() {
 		Calendar today = new GregorianCalendar();
 		Calendar tomorrow = new GregorianCalendar();

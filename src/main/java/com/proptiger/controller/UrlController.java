@@ -43,7 +43,9 @@ public class UrlController {
 	@RequestMapping(value="/url",method=RequestMethod.GET)
 	@ResponseBody
 	public String getLongUrl(@ApiParam(value="Short-url which you want to open",required=true) @RequestParam String shortUrl) {
+		//The url format is <domain-name>/<unique-path>
 		String arr[]=shortUrl.split("/");
+		// after split arr[0] is domain name and arr[1] is unique-path
 		int id=urlService.computeId(arr[1].toCharArray(),arr[1].length());
 		urlService.recordClick(id);
 		return urlService.fetchLongUrl(id);
