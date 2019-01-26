@@ -35,7 +35,7 @@ public class UrlController {
 	@ApiOperation(value="Convert any long-url into short-url",notes="It performs decimal to base 62 conversion on id to generate a unique short url path.",response=String.class)
 	@RequestMapping(value="/url",method=RequestMethod.POST)
 	@ResponseBody
-	public String insertNewUrl(@ApiParam(value="Only provide long-url(required) and domain name(optional)",required=true) @RequestBody Url url) {
+	public String insertNewUrl(@ApiParam(value="long-url(required) and domain name(optional)",required=true) @RequestBody Url url) {
 		return urlService.saveUrl(url);
 	}
 	
@@ -43,12 +43,7 @@ public class UrlController {
 	@RequestMapping(value="/url",method=RequestMethod.GET)
 	@ResponseBody
 	public String getLongUrl(@ApiParam(value="Short-url which you want to open",required=true) @RequestParam String shortUrl) {
-		//The url format is <domain-name>/<unique-path>
-		String arr[]=shortUrl.split("/");
-		// after split arr[0] is domain name and arr[1] is unique-path
-		int id=urlService.computeId(arr[1].toCharArray(),arr[1].length());
-		urlService.recordClick(id);
-		return urlService.fetchLongUrl(id);
+		return urlService.getLongUrl(shortUrl);
 	}
 	
 	@ApiOperation(value="Respond with total clicks of short-url",notes="Looks up data of short to long url requests and extract today's clicks",response=Click.class,responseContainer="List")

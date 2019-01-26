@@ -9,6 +9,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.proptiger.model.Click;
@@ -25,35 +26,82 @@ public class UrlService {
 	@Autowired
 	private ClickDao clickDao;
 	
-	/* This function receives the long url and checks if it is already exist in database. 
-	 * If exist than return corresponding short url.
-	 * Otherwise it will generate a new short url.
-	 * Then save the url's reord in database and return short url.
+	@Autowired
+	private ApplicationContext appCtx;
+	
+	/* 
+	 * This function receives the long-url and checks if it is already exist in database. 
+	 * If exist than return corresponding short-url.
+	 * Otherwise it will generate a new short-url.
+	 * Then save the url's record in database and return short-url.
 	 */
-	//@CachePut(value="LongUrlCache",key="#result")
 	public String saveUrl(Url url) {
-		Url tmpUrl;
-		if( (tmpUrl = isLongUrlExist( url.getLongUrl() ) ) != null) {
-			return tmpUrl.getShortUrl();
-		}
+		UrlService tmpService=appCtx.getBean(UrlService.class);
+		String shortUrl=tmpService.fetchShortUrl(url.getLongUrl());
+		if(shortUrl!=null)
+			return shortUrl;
 		if(url.getDomain()==null) {
 			url.setDomain(Constants.myDomain);
 		}
-		tmpUrl=urlDao.save(url);
+		Url tmpUrl=urlDao.save(url);
 		tmpUrl.setShortUrl(tmpUrl.getDomain()+"/"+generateShortUrl(tmpUrl.getId()));
 		return urlDao.save(tmpUrl).getShortUrl();
 	}
 
-	/* This method fetch long url for short url.
-	 * Id was extracted from short url in UrlController and passed into this method. 
+	/*
+	 * Check database if long-url exist or not.
+	 * If exist than return the corresponding short-url.
 	 */
-	@Cacheable("LongUrlCache")
+	@Cacheable(value="LongToShortCache",unless="#result==null")
+	public String fetchShortUrl(String longUrl) {
+		if(urlDao==null)
+			System.out.println("Why Again?");
+		Url tmpUrl=urlDao.findByLongUrl(longUrl);
+		if(tmpUrl==null)
+			return null;
+		return tmpUrl.getShortUrl();
+	}
+	
+	/* 
+	 * This method generates short-url using auto incremented id.
+	 * Simple base conversion of id from base 10 to base 62.
+	 */
+	private String generateShortUrl(int id) {
+		String map = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"; 
+		String shortUrl=""; 
+ 		while (id>0) { 
+			shortUrl=map.charAt(id%62)+shortUrl; 
+			id=id/62; 
+		} 
+ 		return shortUrl;
+	}
+	
+	/*
+	 * This method fetch long-url and update count for short-url clicks for today.
+	 */
+	public String getLongUrl(String shortUrl) {
+		UrlService tmpService=appCtx.getBean(UrlService.class);
+		String arr[]=shortUrl.split("/");										//The short-url format is <domain-name>/<unique-path>
+		int id=tmpService.computeId(arr[1].toCharArray(),arr[1].length());		// after split arr[0] is domain name and arr[1] is unique-path
+		tmpService.recordClick(id);
+		return tmpService.fetchLongUrl(id);
+		
+	}
+
+	/* 
+	 * This method fetch long-url for short-url.
+	 * Id was extracted from short-url in UrlController and passed into this method. 
+	 */
+	@Cacheable("ShortToLongCache")
 	public String fetchLongUrl(int id) {
+		if(urlDao==null)
+			System.out.println("Why Again?");
 		return urlDao.findById(id).getLongUrl();
 	}
 	
-	/* Stores how much time a short url was clicked.
-	 * It checks database for record of current date for given short url.
+	/* 
+	 * Stores how much time a short-url was clicked.
+	 * It checks database for record of current date for given short-url.
 	 * If the record exist than click count will increased by 1.
 	 * Or a new record is stored with click count 1.
 	 */
@@ -71,7 +119,8 @@ public class UrlService {
 		}
 	}
 	
-	/* Compute id from short url.
+	/* 
+	 * Compute id from short-url.
 	 * Simple base conversion logic for base 62 to base 10.
 	 */
 	public int computeId(char[] shortUrl,int n) {
@@ -86,35 +135,17 @@ public class UrlService {
 	    } 
 	    return id; 
 	}
-	
-	/* Check database if long url exist or not.
-	 * If exist than return the tuple.
-	 */
-	private Url isLongUrlExist(String longUrl) {
-		return urlDao.findByLongUrl(longUrl);
-	}
-	
-	/* This method generates short url using auto incremented id.
-	 * Simple base conversion of id from base 10 to base 62.
-	 */
-	private String generateShortUrl(int id) {
-		String map = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"; 
-		String shortUrl=""; 
- 		while (id>0) { 
-			shortUrl=map.charAt(id%62)+shortUrl; 
-			id=id/62; 
-		} 
- 		return shortUrl;
-	}
 
-	/* Returns the list of ids of urls which were clicked today.
+	/* 
+	 * Returns the list of ids of urls which were clicked today.
 	 */
 	public List<Click> generateDailyReport() {
 		Date currDate=new Date(Calendar.getInstance().getTimeInMillis());
 		return clickDao.generateReport(currDate);
 	}
 	
-	/* Returns the list of urls who are newly created today.
+	/* 
+	 * Returns the list of urls who are newly created today.
 	 * Creation date in database is stored as timestamp instead of date.
 	 * So we query where timestamp between today 12:00AM and tomorrow 12:00AM.
 	 */

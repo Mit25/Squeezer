@@ -14,7 +14,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 public class CacheConfig {
 
 	@Bean
-	public CacheManager cacheManager(RedisTemplate<Integer,String> redisTemplate) {
+	public CacheManager cacheManager(RedisTemplate<Object,String> redisTemplate) {
 		return new RedisCacheManager(redisTemplate);
 	}
 	
@@ -26,8 +26,8 @@ public class CacheConfig {
 	}
 	
 	@Bean
-	public RedisTemplate<Integer, String> redisTemplate(RedisConnectionFactory redisCF) {
-		RedisTemplate<Integer, String> redisTemplate = new RedisTemplate<Integer, String>();
+	public RedisTemplate<Object, String> redisTemplate(RedisConnectionFactory redisCF) {
+		RedisTemplate<Object, String> redisTemplate = new RedisTemplate<Object, String>();
 		redisTemplate.setConnectionFactory(redisCF);
 		redisTemplate.afterPropertiesSet();
 		return redisTemplate;
