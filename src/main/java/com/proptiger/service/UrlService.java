@@ -5,13 +5,14 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.proptiger.model.Click;
 import com.proptiger.model.Url;
 import com.proptiger.repo.ClickDao;
@@ -35,6 +36,7 @@ public class UrlService {
 	 * Otherwise it will generate a new short-url.
 	 * Then save the url's record in database and return short-url.
 	 */
+	@Transactional
 	public String saveUrl(Url url) {
 		UrlService tmpService=appCtx.getBean(UrlService.class);
 		String shortUrl=tmpService.fetchShortUrl(url.getLongUrl());
@@ -83,7 +85,7 @@ public class UrlService {
 		UrlService tmpService=appCtx.getBean(UrlService.class);
 		String arr[]=shortUrl.split("/");										//The short-url format is <domain-name>/<unique-path>
 		int id=tmpService.computeId(arr[1].toCharArray(),arr[1].length());		// after split arr[0] is domain name and arr[1] is unique-path
-		tmpService.recordClick(id);
+		tmpService.recordClick(shortUrl);
 		return tmpService.fetchLongUrl(id);
 		
 	}
@@ -106,15 +108,15 @@ public class UrlService {
 	 * Or a new record is stored with click count 1.
 	 */
 	@Async
-	public void recordClick(int id) {
+	public void recordClick(String shortUrl) {
 		Date currDate=new Date(Calendar.getInstance().getTimeInMillis());
-		Click tmpClick=clickDao.findByIdAndClickDate(id, currDate);
+		Click tmpClick=clickDao.findByShortUrlAndClickDate(shortUrl, currDate);
 		if(tmpClick != null) {
 			tmpClick.setCount(tmpClick.getCount()+1);
 			clickDao.save(tmpClick);
 		}
 		else {
-			tmpClick=new Click(id, currDate);
+			tmpClick=new Click(shortUrl, currDate);
 			clickDao.save(tmpClick);
 		}
 	}
@@ -144,6 +146,10 @@ public class UrlService {
 		return clickDao.generateReport(currDate);
 	}
 	
+	public Click generateFullReport(String shortUrl) {
+		return clickDao.generateFullReport(shortUrl);
+	}
+	
 	/* 
 	 * Returns the list of urls who are newly created today.
 	 * Creation date in database is stored as timestamp instead of date.
@@ -164,6 +170,23 @@ public class UrlService {
 		Timestamp todayDate=new Timestamp(today.getTimeInMillis());
 		Timestamp tomorrowDate=new Timestamp(tomorrow.getTimeInMillis());
 		return urlDao.getDailyUrlCreated(todayDate,tomorrowDate);
+	}
+	
+	public String getDailyUrlCountCreated() {
+		Calendar today = new GregorianCalendar();
+		Calendar tomorrow = new GregorianCalendar();
+		today.set(Calendar.HOUR_OF_DAY, 0);
+		today.set(Calendar.MINUTE, 0);
+		today.set(Calendar.SECOND, 0);
+		today.set(Calendar.MILLISECOND, 0);
+		tomorrow.set(Calendar.HOUR_OF_DAY, 0);
+		tomorrow.set(Calendar.MINUTE, 0);
+		tomorrow.set(Calendar.SECOND, 0);
+		tomorrow.set(Calendar.MILLISECOND, 0);	
+		tomorrow.add(Calendar.DAY_OF_MONTH, 1);
+		Timestamp todayDate=new Timestamp(today.getTimeInMillis());
+		Timestamp tomorrowDate=new Timestamp(tomorrow.getTimeInMillis());
+		return urlDao.getDailyUrlCountCreated(todayDate,tomorrowDate).toString();
 	}
 	
 }

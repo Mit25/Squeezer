@@ -10,9 +10,12 @@ import com.proptiger.model.Click;
 
 public interface ClickDao extends JpaRepository<Click,Integer>{
 
-	public Click findByIdAndClickDate(int id, Date clickDate);
+	public Click findByShortUrlAndClickDate(String shortUrl, Date clickDate);
 
 	@Query(value="select * from Squeezer.Clicks where Squeezer.Clicks.click_date=?1",nativeQuery=true)
-	public List<Click> generateReport(Date currDate); 
+	public List<Click> generateReport(Date currDate);
+
+	@Query(value="select * from Squeezer.Clicks where Squeezer.Clicks.short_url=?1",nativeQuery=true)
+	public Click generateFullReport(String shortUrl); 
 	
 }

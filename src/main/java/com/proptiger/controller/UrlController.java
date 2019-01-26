@@ -53,11 +53,25 @@ public class UrlController {
 		return urlService.generateDailyReport();
 	}
 	
+	@ApiOperation(value="Respond with total clicks of short-url",notes="Looks up data of short to long url requests and extract today's clicks",response=Click.class,responseContainer="List")
+	@RequestMapping(value="/url/report/clickOn",method=RequestMethod.GET)
+	@ResponseBody
+	public Click getFullReport(@ApiParam(value="Short-url for which you want report",required=true) @RequestParam String shortUrl) {
+		return urlService.generateFullReport(shortUrl);
+	}
+	
 	@ApiOperation(value="Respond with total short url created today",notes="Queries database and return the result set.",response=Url.class,responseContainer="List")
 	@RequestMapping(value="/url/report/newUrls",method=RequestMethod.GET)
 	@ResponseBody
 	public List<Url> getDailyUrlCreated() {
 		return urlService.getDailyUrlCreated();
+	}
+	
+	@ApiOperation(value="Respond with total number short url created today",notes="Queries database and return the result set.",response=Integer.class)
+	@RequestMapping(value="/url/report/newUrlCount",method=RequestMethod.GET)
+	@ResponseBody
+	public String getDailyUrlCountCreated() {
+		return urlService.getDailyUrlCountCreated();
 	}
 
 }

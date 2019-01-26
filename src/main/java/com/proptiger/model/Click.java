@@ -15,8 +15,8 @@ import javax.persistence.Table;
 public class Click {
 	
 	@Id
-	@Column(name="id")
-	private int id;
+	@Column(name="short_url")
+	private String shortUrl;
 
 	@Id
 	@Column(name="click_date")
@@ -34,17 +34,17 @@ public class Click {
 		
 	}
 	
-	public Click(int id, Date currDate) {
-		this.id=id;
+	public Click(String shortUrl, Date currDate) {
+		this.shortUrl=shortUrl;
 		this.clickDate=currDate;
 	}
 	
-	public int getId() {
-		return id;
+	public String getShortUrl() {
+		return shortUrl;
 	}
 
-	public void setId(int id) {
-		this.id = id;
+	public void setShortUrl(String shortUrl) {
+		this.shortUrl = shortUrl;
 	}
 	
 	public Date getClickDate() {
