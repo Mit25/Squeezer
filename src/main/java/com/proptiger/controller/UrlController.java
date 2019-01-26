@@ -46,7 +46,7 @@ public class UrlController {
 		return urlService.getLongUrl(shortUrl);
 	}
 	
-	@ApiOperation(value="Respond with total clicks of short-url",notes="Looks up data of short to long url requests and extract today's clicks",response=Click.class,responseContainer="List")
+	@ApiOperation(value="Respond with total clicks of short-urls",notes="Looks up data of short to long url requests and extract today's clicks",response=Click.class,responseContainer="List")
 	@RequestMapping(value="/url/report/clicks",method=RequestMethod.GET)
 	@ResponseBody
 	public List<Click> getDailyReport() {
