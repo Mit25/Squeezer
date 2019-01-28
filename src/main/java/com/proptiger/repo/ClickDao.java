@@ -16,6 +16,6 @@ public interface ClickDao extends JpaRepository<Click,Integer>{
 	public List<Click> generateReport(Date currDate);
 
 	@Query(value="select * from Squeezer.Clicks where Squeezer.Clicks.short_url=?1",nativeQuery=true)
-	public Click generateFullReport(String shortUrl); 
+	public List<Click> generateFullReport(String shortUrl); 
 	
 }

@@ -56,7 +56,7 @@ public class UrlController {
 	@ApiOperation(value="Respond with total clicks of short-url",notes="Looks up data of short to long url requests and extract today's clicks",response=Click.class,responseContainer="List")
 	@RequestMapping(value="/url/report/clickOn",method=RequestMethod.GET)
 	@ResponseBody
-	public Click getFullReport(@ApiParam(value="Short-url for which you want report",required=true) @RequestParam String shortUrl) {
+	public List<Click> getFullReport(@ApiParam(value="Short-url for which you want report",required=true) @RequestParam String shortUrl) {
 		return urlService.generateFullReport(shortUrl);
 	}
 	

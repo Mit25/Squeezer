@@ -146,7 +146,7 @@ public class UrlService {
 		return clickDao.generateReport(currDate);
 	}
 	
-	public Click generateFullReport(String shortUrl) {
+	public List<Click> generateFullReport(String shortUrl) {
 		return clickDao.generateFullReport(shortUrl);
 	}
 	
